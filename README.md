@@ -1,205 +1,309 @@
-# Local Code Knowledge Graph
+# Local Code Knowledge Graph (CKG)
 
-> **One-liner:** `grep` that understands your code—locally, privately, in real-time.
+[![CI](https://github.com/phoenix-assistant/local-code-knowledge-graph/actions/workflows/ci.yml/badge.svg)](https://github.com/phoenix-assistant/local-code-knowledge-graph/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/ckg)](https://pypi.org/project/ckg/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## Problem
+Privacy-first Graph RAG for codebases. Build a knowledge graph of your code with real-time watching, incremental indexing, and agent integration via MCP.
 
-**Persona:** Marcus, staff engineer at a Series B startup with a 500k LOC monorepo
+## Features
 
-**Pain:**
-- Onboards 2 new engineers/month who ask "where does X happen?" constantly
-- Code search (grep, ripgrep) finds text but not relationships ("what calls this?", "what depends on this?")
-- GitHub Copilot suggests patterns that don't match their codebase conventions
-- Existing code intel tools (Sourcegraph) require server setup, are overkill for his 15-person team
-- When he asks Claude about his code, he has to manually paste files—context window fills fast
+- 🌲 **Tree-sitter Parsing** — Accurate AST parsing for Python, TypeScript/JavaScript, Go, Rust, and more
+- 🕸️ **Knowledge Graph** — Functions, classes, imports, and dependencies as nodes/edges
+- ⚡ **Incremental Indexing** — Only re-index changed files (git diff aware)
+- 👁️ **Real-time Watching** — Live updates as you code
+- 🔍 **Graph RAG** — Query expansion via graph traversal before vector search
+- 🤖 **MCP Server** — Integration with Claude Code and other agents
+- 🖥️ **CLI** — Simple commands for indexing, querying, and watching
 
-**Quantified:**
-- 2-3 hours/week answering "where is X?" questions from team
-- New engineer ramp time: 3 months to "productive", 6 months to "autonomous"
-- 40% of code review comments are about patterns/conventions that should be discoverable
-- Average codebase query takes 5-10 minutes of manual file exploration
+## Installation
 
-## Solution
-
-**What:** CLI-first local code knowledge graph:
-- **Real-time watching** — Index updates as you save files
-- **Graph-aware queries** — "What calls getUserById?", "What modules depend on auth?"
-- **Agent integration** — MCP server for Claude/agents to query your code
-- **Incremental indexing** — Sub-second updates, not full re-index
-- **100% local** — No cloud, no telemetry, runs on your laptop
-
-**How:**
-1. Language-aware parsing (Tree-sitter) extracts AST → symbols, calls, imports
-2. Builds property graph: nodes (functions, classes, files) + edges (calls, imports, extends)
-3. Embeds docstrings/comments for semantic search
-4. Exposes CLI (`ckg query "what handles auth?"`) and MCP server
-5. File watcher triggers incremental updates
-
-**Why Us:**
-- Deep experience with code analysis (built internal tools)
-- Understand agent integration requirements (MCP, context budgets)
-- Can make CLI UX excellent (see: OpenClaw CLI design)
-
-## Why Now
-
-1. **AI agents need code context** — Every coding agent is context-starved
-2. **Sourcegraph pivoted to enterprise** — Left SMB/individual market underserved
-3. **Tree-sitter is mature** — Language parsing is solved for 20+ languages
-4. **MCP provides distribution** — Ship as MCP server, instant Claude Desktop integration
-5. **Local-first movement** — Developers increasingly privacy-conscious about code
-
-## Market Landscape
-
-**TAM:** $15B (developer tools)
-**SAM:** $3B (code intelligence/search)
-**SOM:** $100M (local-first code knowledge, Year 3)
-
-### Competitors & Gaps
-
-| Competitor | What They Do | Gap |
-|------------|--------------|-----|
-| **Sourcegraph** | Enterprise code search | $$$, server-based, overkill for small teams |
-| **GitHub Code Search** | Cloud code search | GitHub-only, no relationships, no local |
-| **Cursor** | AI code editor | Editor-locked, no standalone query |
-| **Codeium** | AI code assistant | Cloud-based, no graph queries |
-| **ctags/cscope** | Symbol indexing | Ancient UX, no semantic, no graph |
-| **LSP servers** | IDE code intel | Editor-specific, no cross-repo, no natural language |
-| **grep/ripgrep** | Text search | No understanding, just string matching |
-
-**White space:** Local graph-aware code search with agent integration.
-
-## Competitive Advantages
-
-1. **Local-first moat** — Privacy-conscious devs won't send code to cloud
-2. **Real-time incremental** — Competitors batch-index, we're instant
-3. **Agent-native** — MCP server makes us the default for Claude users
-4. **CLI excellence** — Great UX for terminal-native developers
-5. **Open source core** — Community contributions, trust, distribution
-
-## Technical Architecture
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                   Query Layer                            │
-│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐       │
-│  │    CLI      │ │ MCP Server  │ │  HTTP API   │       │
-│  │ ckg query   │ │ for Agents  │ │  (optional) │       │
-│  └──────┬──────┘ └──────┬──────┘ └──────┬──────┘       │
-└─────────┼───────────────┼───────────────┼───────────────┘
-          │               │               │
-┌─────────▼───────────────▼───────────────▼───────────────┐
-│                   Query Engine                           │
-│  • Natural language → graph query translation            │
-│  • Cypher-like query language for power users           │
-│  • Semantic search over embeddings                       │
-│  • Result ranking and formatting                         │
-└─────────────────────────────────────────────────────────┘
-          │
-┌─────────▼───────────────────────────────────────────────┐
-│                   Index Layer                            │
-│  ┌─────────────────────────────────────────────────┐   │
-│  │              Graph Database                      │   │
-│  │  Nodes: files, functions, classes, variables    │   │
-│  │  Edges: calls, imports, extends, implements     │   │
-│  │  Store: SQLite + custom graph indexes           │   │
-│  └─────────────────────────────────────────────────┘   │
-│  ┌─────────────────────────────────────────────────┐   │
-│  │              Vector Index                        │   │
-│  │  Embeddings for docstrings, comments, names     │   │
-│  │  Store: SQLite-vss or Qdrant local              │   │
-│  └─────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────┘
-          │
-┌─────────▼───────────────────────────────────────────────┐
-│                   Indexing Pipeline                      │
-│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐       │
-│  │ File Watcher│ │ Tree-sitter │ │  Embedding  │       │
-│  │  (notify)   │ │   Parser    │ │  Generator  │       │
-│  └──────┬──────┘ └──────┬──────┘ └──────┬──────┘       │
-└─────────┼───────────────┼───────────────┼───────────────┘
-          │               │               │
-          ▼               ▼               ▼
-    ┌──────────────────────────────────────┐
-    │            Source Files               │
-    │        (your local codebase)          │
-    └──────────────────────────────────────┘
+```bash
+pip install ckg
 ```
 
-**Stack:**
-- Language: Rust (performance, single binary distribution)
-- Parsing: Tree-sitter (20+ language grammars)
-- Graph storage: SQLite + custom adjacency indexes
-- Vector search: SQLite-vss (built-in) or optional Qdrant
-- Embeddings: Ollama (local) or OpenAI (optional, user's key)
-- File watching: notify-rs (cross-platform)
-- CLI: clap + ratatui for interactive mode
-- MCP: TypeScript wrapper or Rust native
+Or with Docker:
 
-## Build Plan
+```bash
+docker pull ghcr.io/phoenix-assistant/ckg
+```
 
-| Week | Milestone |
-|------|-----------|
-| 1-2 | Rust project scaffold, Tree-sitter integration for JS/TS/Python |
-| 3-4 | Graph schema, SQLite storage, basic symbol extraction |
-| 5-6 | Call graph extraction, import resolution, relationship indexing |
-| 7-8 | CLI query interface, natural language → graph query |
-| 9-10 | File watcher, incremental indexing, embedding integration |
-| 11-12 | MCP server, Claude Desktop testing, documentation |
-| 13-14 | Additional languages (Go, Rust, Java), performance optimization |
-| 15-16 | Public release, HN launch, community feedback |
+## Quick Start
 
-**Team:** 1 dev (you), Rust experience required
+```bash
+# Index your codebase
+ckg index
 
-## Risks & Mitigations
+# Search for symbols
+ckg query "authentication handler"
 
-| Risk | Likelihood | Impact | Mitigation |
-|------|------------|--------|------------|
-| Tree-sitter parsing incomplete | Medium | Medium | Start with JS/TS/Python (best grammars), expand carefully |
-| Performance issues at scale | Medium | Medium | Profile early, SQLite is fast, cache hot paths |
-| Natural language queries disappoint | High | Medium | Power user query language fallback, improve with usage data |
-| Cursor/Codeium ship similar | High | High | Local-first differentiation, open source, move fast |
-| Rust slows development velocity | Medium | Low | Worth it for distribution (single binary) |
+# Find a specific function
+ckg find "process_payment"
 
-## Monetization
+# Watch for changes
+ckg watch
 
-**Model:** Open core + paid features
+# Start MCP server for Claude Code
+ckg serve
+```
 
-| Tier | Price | Includes |
-|------|-------|----------|
-| Core | Free | CLI, graph queries, JS/TS/Python, 1 repo |
-| Pro | $20/mo | All languages, multi-repo, team sharing, priority support |
-| Team | $15/user/mo | Shared indexes, org-wide search, admin dashboard |
-| Enterprise | Custom | On-prem server mode, SSO, SLA |
+## CLI Commands
 
-**Path to $1M ARR:**
+### `ckg index`
 
-- **Target:** 
-  - 2,500 Pro users @ $20/mo = $600k ARR
-  - 40 teams × 10 users @ $15/mo = $400k ARR (bonus if hits)
-  
-- **Funnel:**
-  - 100,000 free users (GitHub stars → downloads)
-  - 5% power users try Pro = 5,000 trials
-  - 50% convert = 2,500 Pro users
+Index the codebase into the knowledge graph.
 
-- **Timeline:** 18-24 months post-launch
+```bash
+ckg index              # Incremental index (default)
+ckg index --full       # Force full re-index
+ckg --repo /path/to/repo index  # Index specific repo
+```
 
-**Expansion:** Enterprise deals, Cursor/VS Code plugin marketplace
+### `ckg query`
 
-## Verdict
+Search the knowledge graph using natural language.
 
-### 🟢 BUILD
+```bash
+ckg query "authentication"
+ckg query "error handling" --type function
+ckg query "database models" --limit 20
+```
 
-**Reasoning:**
-1. **Clear pain point** — Every developer who's used an AI coding tool has hit this
-2. **Differentiated angle** — Local + graph + real-time + MCP is unique combination
-3. **Distribution path clear** — Open source + MCP registry + HN = organic growth
-4. **Technical feasibility** — Tree-sitter, SQLite, Rust all proven; no research risk
-5. **Compounds with other tools** — Integrates with agent memory, token budgeting
+### `ckg find`
 
-**Caveats:**
-- Rust development is slower; plan for it
-- Natural language queries are hard—consider starting with structured queries
-- Cursor is well-funded and moving fast; speed matters
+Find a specific symbol definition.
 
-**First step:** Build MVP for TypeScript only (our main language), test on OpenClaw codebase. If we love it, proceed to full build.
+```bash
+ckg find "UserService"
+ckg find "handle_request"
+```
+
+### `ckg file`
+
+Show all symbols in a file.
+
+```bash
+ckg file "src/auth/handler.py"
+```
+
+### `ckg stats`
+
+Show graph statistics.
+
+```bash
+ckg stats
+```
+
+### `ckg watch`
+
+Watch for file changes and update index in real-time.
+
+```bash
+ckg watch
+ckg watch --verbose
+```
+
+### `ckg graph`
+
+Export graph in DOT format for visualization.
+
+```bash
+ckg graph > codebase.dot
+dot -Tpng codebase.dot -o codebase.png
+```
+
+### `ckg serve`
+
+Start MCP server for agent integration.
+
+```bash
+ckg serve
+```
+
+## MCP Integration
+
+CKG provides an MCP (Model Context Protocol) server for integration with AI agents like Claude Code.
+
+### Available Tools
+
+| Tool | Description |
+|------|-------------|
+| `ckg_query` | Search the code knowledge graph using natural language |
+| `ckg_find_definition` | Find the definition of a symbol |
+| `ckg_find_references` | Find all references to a symbol |
+| `ckg_file_summary` | Get a summary of all symbols in a file |
+| `ckg_graph_stats` | Get statistics about the knowledge graph |
+| `ckg_index` | Index or re-index the codebase |
+
+### Claude Code Configuration
+
+Add to your Claude Code MCP config:
+
+```json
+{
+  "mcpServers": {
+    "ckg": {
+      "command": "ckg",
+      "args": ["--repo", "/path/to/your/repo", "serve"]
+    }
+  }
+}
+```
+
+## Graph Schema
+
+### Nodes
+
+| Type | Description |
+|------|-------------|
+| `File` | Source file with path, language, modification time |
+| `Function` | Function/method with signature, docstring, location |
+| `Class` | Class with docstring, bases, decorators |
+| `Import` | Import statement with module and items |
+| `Variable` | Module/class-level variable with type hint |
+
+### Edges
+
+| Type | Description |
+|------|-------------|
+| `DEFINES` | File → Function/Class |
+| `CONTAINS` | Class → Method |
+| `IMPORTS` | File → Import |
+| `CALLS` | Function → Function |
+| `INHERITS` | Class → Class |
+| `USES` | Function → Variable |
+
+## Supported Languages
+
+**Priority 0 (Full Support)**
+- Python (.py, .pyw, .pyi)
+- TypeScript (.ts, .tsx, .mts, .cts)
+- JavaScript (.js, .jsx, .mjs, .cjs)
+- Go (.go)
+- Rust (.rs)
+
+**Priority 1 (Coming Soon)**
+- Java
+- C/C++
+- Ruby
+- PHP
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                 Local Code Knowledge Graph                   │
+├─────────────────────────────────────────────────────────────┤
+│  Interface Layer                                             │
+│  ├── CLI (ckg index/query/watch/graph/stats)                │
+│  ├── MCP Server (for Claude Code)                           │
+│  └── Python SDK                                              │
+├─────────────────────────────────────────────────────────────┤
+│  Query Engine                                                │
+│  ├── Graph traversal (find related symbols)                 │
+│  ├── Vector search (semantic similarity)                    │
+│  └── Hybrid ranking (graph + vector + recency)              │
+├─────────────────────────────────────────────────────────────┤
+│  Indexing Engine                                             │
+│  ├── Tree-sitter parsing (20+ languages)                    │
+│  ├── Incremental updates (git diff aware)                   │
+│  └── Real-time watch (watchdog)                             │
+├─────────────────────────────────────────────────────────────┤
+│  Storage                                                     │
+│  ├── Graph: NetworkX + SQLite                               │
+│  └── Vectors: ChromaDB                                       │
+└─────────────────────────────────────────────────────────────┘
+```
+
+## Python SDK
+
+```python
+from pathlib import Path
+from ckg import CodeIndexer, GraphStore, QueryEngine
+
+# Initialize
+repo_path = Path("/path/to/repo")
+store = GraphStore(db_path=repo_path / ".ckg" / "graph.db")
+indexer = CodeIndexer(repo_path, store)
+query_engine = QueryEngine(store)
+
+# Index
+indexer.index_full()
+query_engine.index_vectors()
+
+# Query
+result = query_engine.query("authentication handler")
+for node in result.nodes:
+    print(f"{node.type}: {node.name}")
+
+# Find definition
+result = query_engine.find_definition("UserService")
+
+# Get file summary
+result = query_engine.get_file_summary("src/auth/handler.py")
+```
+
+## Docker
+
+```bash
+# Run with docker-compose
+cd docker
+REPO_PATH=/path/to/repo docker-compose up ckg
+
+# Watch mode
+REPO_PATH=/path/to/repo docker-compose up ckg-watch
+
+# MCP server
+REPO_PATH=/path/to/repo docker-compose up ckg-mcp
+```
+
+## Development
+
+```bash
+# Clone
+git clone https://github.com/phoenix-assistant/local-code-knowledge-graph.git
+cd local-code-knowledge-graph
+
+# Install dev dependencies
+pip install -e ".[dev]"
+
+# Run tests
+pytest
+
+# Lint
+ruff check src tests
+
+# Type check
+mypy src
+```
+
+## How It Works
+
+1. **Parsing**: Tree-sitter parses source files into ASTs, extracting functions, classes, imports, and their relationships.
+
+2. **Graph Construction**: Symbols become nodes, relationships become edges. The graph is stored in SQLite for persistence.
+
+3. **Vector Indexing**: Symbol names, signatures, and docstrings are embedded using sentence-transformers and stored in ChromaDB.
+
+4. **Query Processing**: 
+   - Natural language queries → vector search for semantic matching
+   - Graph traversal expands results to related symbols
+   - Hybrid ranking combines vector similarity, graph centrality, and recency
+
+5. **Real-time Updates**: Watchdog monitors file changes, triggering incremental re-indexing only for modified files.
+
+## Why CKG?
+
+- **Privacy-first**: Everything runs locally. Your code never leaves your machine.
+- **Fast**: Incremental indexing and efficient graph queries.
+- **Accurate**: Tree-sitter provides precise AST parsing, not regex heuristics.
+- **Agent-ready**: MCP integration for AI coding assistants.
+- **Language-aware**: Proper understanding of each language's semantics.
+
+## License
+
+MIT License - see [LICENSE](LICENSE) for details.
+
+## Contributing
+
+Contributions welcome! Please read our [contributing guidelines](CONTRIBUTING.md) first.

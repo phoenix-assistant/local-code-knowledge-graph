@@ -1,0 +1,35 @@
+version: "3.8"
+
+services:
+  ckg:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    volumes:
+      - ${REPO_PATH:-.}:/repo:ro
+      - ckg-data:/repo/.ckg
+    command: ["index"]
+
+  ckg-watch:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    volumes:
+      - ${REPO_PATH:-.}:/repo
+      - ckg-data:/repo/.ckg
+    command: ["watch", "-v"]
+    restart: unless-stopped
+
+  ckg-mcp:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    volumes:
+      - ${REPO_PATH:-.}:/repo:ro
+      - ckg-data:/repo/.ckg
+    command: ["serve"]
+    ports:
+      - "3000:3000"
+
+volumes:
+  ckg-data:
