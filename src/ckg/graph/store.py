@@ -155,7 +155,7 @@ class GraphStore:
     def get_nodes_by_type(self, node_type: NodeType) -> list[BaseNode]:
         """Get all nodes of a specific type."""
         nodes = []
-        for node_id, data in self.graph.nodes(data=True):
+        for _node_id, data in self.graph.nodes(data=True):
             if data.get("type") == node_type.value:
                 nodes.append(self._deserialize_node(data["type"], data))
         return nodes
@@ -163,10 +163,8 @@ class GraphStore:
     def get_nodes_by_name(self, name: str, exact: bool = True) -> list[BaseNode]:
         """Get nodes by name."""
         nodes = []
-        for node_id, data in self.graph.nodes(data=True):
-            if exact and data.get("name") == name:
-                nodes.append(self._deserialize_node(data["type"], data))
-            elif not exact and name.lower() in data.get("name", "").lower():
+        for _node_id, data in self.graph.nodes(data=True):
+            if exact and data.get("name") == name or not exact and name.lower() in data.get("name", "").lower():
                 nodes.append(self._deserialize_node(data["type"], data))
         return nodes
 

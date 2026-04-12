@@ -2,10 +2,10 @@
 
 import pytest
 
-from ckg.parsing.python_parser import PythonParser
-from ckg.parsing.typescript_parser import TypeScriptParser, JavaScriptParser
 from ckg.parsing.go_parser import GoParser
+from ckg.parsing.python_parser import PythonParser
 from ckg.parsing.rust_parser import RustParser
+from ckg.parsing.typescript_parser import TypeScriptParser
 
 
 class TestPythonParser:

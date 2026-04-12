@@ -1,8 +1,8 @@
 """TypeScript/JavaScript parser using Tree-sitter."""
 
-import tree_sitter_typescript as tstypescript
 import tree_sitter_javascript as tsjavascript
-from tree_sitter import Language, Parser, Node
+import tree_sitter_typescript as tstypescript
+from tree_sitter import Language, Node, Parser
 
 from ckg.graph.models import (
     ClassNode,

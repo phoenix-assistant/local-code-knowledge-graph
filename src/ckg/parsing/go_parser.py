@@ -1,7 +1,7 @@
 """Go parser using Tree-sitter."""
 
 import tree_sitter_go as tsgo
-from tree_sitter import Language, Parser, Node
+from tree_sitter import Language, Node, Parser
 
 from ckg.graph.models import (
     ClassNode,

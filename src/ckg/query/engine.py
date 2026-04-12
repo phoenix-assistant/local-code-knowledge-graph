@@ -52,7 +52,7 @@ class QueryEngine:
         documents = []
         metadatas = []
 
-        for node_id, data in self.store.graph.nodes(data=True):
+        for node_id, _data in self.store.graph.nodes(data=True):
             node = self.store.get_node(node_id)
             if not node:
                 continue
@@ -255,7 +255,7 @@ class QueryEngine:
 
         symbols = self.traversal.get_file_symbols(file_id)
 
-        for category, nodes in symbols.items():
+        for _category, nodes in symbols.items():
             for node in nodes:
                 result.nodes.append(node)
                 result.scores[node.id] = 1.0

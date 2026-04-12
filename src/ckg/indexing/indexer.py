@@ -1,9 +1,9 @@
 """Code indexer with full and incremental support."""
 
 import os
+from collections.abc import Callable
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Callable
 
 from ckg.graph.models import Edge, EdgeType, FileNode
 from ckg.graph.store import GraphStore
@@ -105,8 +105,7 @@ class CodeIndexer:
 
             for filename in files:
                 file_path = Path(root) / filename
-                if file_path.suffix.lower() in supported_exts:
-                    if not self.should_ignore(file_path):
+                if file_path.suffix.lower() in supported_exts and not self.should_ignore(file_path):
                         files_to_index.append(file_path)
 
         total = len(files_to_index)
@@ -178,7 +177,6 @@ class CodeIndexer:
 
             if change.status == "D":
                 # Deleted file - remove from graph
-                file_id = f"file:{change.path}"
                 self.store.remove_file_nodes(change.path)
                 stats["files_deleted"] += 1
 
@@ -285,7 +283,7 @@ class CodeIndexer:
     def _count_lines(self, file_path: Path) -> int:
         """Count lines in a file."""
         try:
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, encoding="utf-8") as f:
                 return sum(1 for _ in f)
         except Exception:
             return 0

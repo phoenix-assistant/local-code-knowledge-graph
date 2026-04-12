@@ -1,15 +1,13 @@
 """MCP server for Code Knowledge Graph."""
 
-import json
 from pathlib import Path
 from typing import Any
 
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp.types import (
-    Tool,
     TextContent,
-    CallToolResult,
+    Tool,
 )
 
 from ckg.graph.models import NodeType
@@ -248,13 +246,13 @@ class MCPServer:
 
         if incremental:
             stats = self.indexer.index_incremental()
-            output = f"Incremental index complete:\n"
+            output = "Incremental index complete:\n"
             output += f"- Files added: {stats.get('files_added', 0)}\n"
             output += f"- Files modified: {stats.get('files_modified', 0)}\n"
             output += f"- Files deleted: {stats.get('files_deleted', 0)}\n"
         else:
             stats = self.indexer.index_full()
-            output = f"Full index complete:\n"
+            output = "Full index complete:\n"
             output += f"- Files processed: {stats.get('files_processed', 0)}\n"
             output += f"- Functions: {stats.get('functions', 0)}\n"
             output += f"- Classes: {stats.get('classes', 0)}\n"

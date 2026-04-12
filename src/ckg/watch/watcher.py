@@ -1,11 +1,11 @@
 """File system watcher for real-time code indexing."""
 
 import time
+from collections.abc import Callable
 from pathlib import Path
 from threading import Event, Thread
-from typing import Callable
 
-from watchdog.events import FileSystemEventHandler, FileSystemEvent
+from watchdog.events import FileSystemEvent, FileSystemEventHandler
 from watchdog.observers import Observer
 
 from ckg.indexing.indexer import CodeIndexer

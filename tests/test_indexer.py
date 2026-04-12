@@ -1,6 +1,5 @@
 """Tests for code indexer."""
 
-import tempfile
 from pathlib import Path
 
 import pytest
@@ -100,7 +99,7 @@ export function createApp(): App {
 
         # Should either have incremental stats or full stats (fallback)
         assert (
-            "files_added" in stats or 
+            "files_added" in stats or
             "files_processed" in stats
         )
 
@@ -110,7 +109,7 @@ export function createApp(): App {
         node_modules.mkdir()
         (node_modules / "package.js").write_text("// ignored")
 
-        stats = indexer.index_full()
+        indexer.index_full()
 
         # node_modules should not be indexed
         file_nodes = indexer.store.get_nodes_by_type(

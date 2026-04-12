@@ -1,7 +1,7 @@
 """Graph traversal algorithms for code knowledge graph."""
 
 from collections import deque
-from typing import Callable
+from collections.abc import Callable
 
 import networkx as nx
 
@@ -173,7 +173,7 @@ class GraphTraversal:
             "variables": [],
         }
 
-        for _, target_id, data in self.store.graph.out_edges(file_id, data=True):
+        for _, target_id, _data in self.store.graph.out_edges(file_id, data=True):
             node = self.store.get_node(target_id)
             if not node:
                 continue

@@ -1,6 +1,5 @@
 """CLI commands for Code Knowledge Graph."""
 
-import sys
 import time
 from pathlib import Path
 
@@ -11,7 +10,6 @@ from rich.table import Table
 
 from ckg.graph.store import GraphStore
 from ckg.indexing.indexer import CodeIndexer
-from ckg.parsing.manager import ParserManager
 from ckg.query.engine import QueryEngine
 from ckg.watch.watcher import FileWatcher
 
@@ -329,8 +327,9 @@ def serve(ctx: click.Context) -> None:
     repo_path = ctx.obj["repo_path"]
     console.print(f"[bold]Starting MCP server[/bold] for {repo_path}")
 
-    from ckg.mcp.server import MCPServer
     import asyncio
+
+    from ckg.mcp.server import MCPServer
 
     server = MCPServer(repo_path)
     asyncio.run(server.run())

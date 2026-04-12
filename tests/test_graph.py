@@ -1,7 +1,5 @@
 """Tests for graph store and traversal."""
 
-import tempfile
-from pathlib import Path
 
 import pytest
 
